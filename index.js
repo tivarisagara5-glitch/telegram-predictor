@@ -57,10 +57,8 @@ function sendPredictions() {
 
   const alexMessage = `
   💫 WinGo 30 Second 💥
+  🧛Alex
 👋 Hello Users
-
-📊 Prediction Time!
-👤 Alex Predictor
 
 🕒 Period: ${d.period}
 🔮 Prediction: ${d.alex === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
@@ -70,10 +68,8 @@ function sendPredictions() {
 `;
 
   const sidantaMessage = `
+  🤹 Sidanta
 👋 Hello Users
-
-📊 Prediction Time!
-👤 Sidanta Predictor
 
 🕒 Period: ${d.period}
 🔮 Prediction: ${d.sidanta === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
