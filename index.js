@@ -4,10 +4,9 @@ const TelegramBot = require("node-telegram-bot-api");
 // ================== BOTS ==================
 const alex = new TelegramBot(process.env.ALEX_TOKEN, { polling: false });
 const sidanta = new TelegramBot(process.env.SIDANTA_TOKEN, { polling: false });
-
 const GROUP_ID = process.env.GROUP_ID;
 
-// ================== EXACT USER GIVEN TRENDS ==================
+// ================== EXACT USER TRENDS ==================
 const trendAlex = [
   "S","S","S","B","B","B","S","B","S","B",
   "S","B","B","S","B","S","B","S","B","B","B","S","S","S"
@@ -17,72 +16,78 @@ const trendSidanta = [
   "S","S","S","B","B","B","S","B","S","B","S","B"
 ];
 
-// ================== PERIOD SETTINGS ==================
+// ================== SETTINGS ==================
 const START_PERIOD = 10001;
-const PERIOD_TIME = 60000; // 1 minute
+const PERIOD_MS = 60000;
+
+// ================== IST TIME HELPERS ==================
+function getISTNow() {
+  const now = new Date();
+  return new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+}
 
 // ================== CORE LOGIC ==================
 function getPredictionData() {
-  const now = new Date();
+  const nowIST = getISTNow();
 
-  // Game start time = 05:30 AM
   let startTime = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    5, 30, 0
+    nowIST.getFullYear(),
+    nowIST.getMonth(),
+    nowIST.getDate(),
+    5, 30, 0, 0
   );
 
   // Agar abhi 05:30 se pehle hai → previous day
-  if (now < startTime) {
+  if (nowIST < startTime) {
     startTime.setDate(startTime.getDate() - 1);
   }
 
-  const elapsed = Math.floor((now - startTime) / PERIOD_TIME);
-  const periodNumber = START_PERIOD + elapsed;
+  const elapsedMinutes = Math.floor(
+    (nowIST - startTime) / PERIOD_MS
+  );
 
-  const alexPick = trendAlex[elapsed % trendAlex.length];
-  const sidantaPick = trendSidanta[elapsed % trendSidanta.length];
+  const periodNumber = START_PERIOD + elapsedMinutes;
+
+  const alexPick = trendAlex[elapsedMinutes % trendAlex.length];
+  const sidantaPick = trendSidanta[elapsedMinutes % trendSidanta.length];
 
   return {
-    period: String(periodNumber).slice(-3),
+    period: periodNumber,
     alex: alexPick === "B" ? "BIG" : "SMALL",
     sidanta: sidantaPick === "B" ? "BIG" : "SMALL"
   };
 }
 
-// ================== MESSAGE SENDER ==================
+// ================== MESSAGE ==================
 function sendPredictions() {
   const d = getPredictionData();
 
-  const alexMsg = `
-💥💥WinGo 1 Minute 💥💥
-    🦸Alex Bhai
-
-🕒 Period: ${d.period}
-🔮 Prediction: ${d.alex === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
-`;
-
-  const sidantaMsg = `
-🤹Sidanta Bhai
-
-🕒 Period: ${d.period}
-🔮 Prediction: ${d.sidanta === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
-
-✅ Alex & Sidanta dono ka result dekho
-🎯 Jo sahi aaye — usko FOLLOW karo
-`;
-
-  alex.sendMessage(GROUP_ID, alexMsg);
-  sidanta.sendMessage(GROUP_ID, sidantaMsg);
-
-  console.log(
-    `1MIN | P:${d.period} | Alex:${d.alex} | Sidanta:${d.sidanta}`
+  alex.sendMessage(
+    GROUP_ID,
+    `👋 Hello Users\n\n⏱ 1 Minute Predictor\n👤 Alex\n\n🕒 Period: ${d.period}\n🔮 Prediction: ${d.alex === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}`
   );
+
+  sidanta.sendMessage(
+    GROUP_ID,
+    `👋 Hello Users\n\n⏱ 1 Minute Predictor\n👤 Sidanta\n\n🕒 Period: ${d.period}\n🔮 Prediction: ${d.sidanta === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}`
+  );
+
+  console.log(`SENT | P:${d.period} | Alex:${d.alex} | Sidanta:${d.sidanta}`);
 }
 
-// ================== AUTO RUN ==================
-sendPredictions();          // start hote hi ek baar
-setInterval(sendPredictions, PERIOD_TIME);
+// ================== EXACT MINUTE SYNC ==================
+function startScheduler() {
+  const now = getISTNow();
+  const delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
-console.log("🤖 1-Minute Predictor (Correct Trend) Running...");
+  setTimeout(() => {
+    sendPredictions();                 // exact minute hit
+    setInterval(sendPredictions, PERIOD_MS);
+  }, delay);
+}
+
+// ================== START ==================
+startScheduler();
+console.log("🤖 Predictor synced to IST minute boundary");
