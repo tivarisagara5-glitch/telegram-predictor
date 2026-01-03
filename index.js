@@ -7,25 +7,25 @@ const sidanta = new TelegramBot(process.env.SIDANTA_TOKEN, { polling: false });
 
 const GROUP_ID = process.env.GROUP_ID;
 
-// ================== TRENDS ==================
-const trend1 = [
+// ================== EXACT USER GIVEN TRENDS ==================
+const trendAlex = [
   "S","S","S","B","B","B","S","B","S","B",
   "S","B","B","S","B","S","B","S","B","B","B","S","S","S"
 ];
 
-const trend2 = [
+const trendSidanta = [
   "S","S","S","B","B","B","S","B","S","B","S","B"
 ];
 
 // ================== PERIOD SETTINGS ==================
-const START_PERIOD = 50001;
-const PERIOD_TIME = 30000; // 30 sec
+const START_PERIOD = 10001;
+const PERIOD_TIME = 60000; // 1 minute
 
 // ================== CORE LOGIC ==================
 function getPredictionData() {
   const now = new Date();
 
-  // Game start time 05:30 AM
+  // Game start time = 05:30 AM
   let startTime = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -33,21 +33,21 @@ function getPredictionData() {
     5, 30, 0
   );
 
-  // If current time < 05:30, go to previous day
+  // Agar abhi 05:30 se pehle hai → previous day
   if (now < startTime) {
     startTime.setDate(startTime.getDate() - 1);
   }
 
-  const elapsedPeriods = Math.floor((now - startTime) / PERIOD_TIME);
-  const periodNumber = START_PERIOD + elapsedPeriods;
+  const elapsed = Math.floor((now - startTime) / PERIOD_TIME);
+  const periodNumber = START_PERIOD + elapsed;
 
-  const alexRaw = trend1[elapsedPeriods % trend1.length];
-  const sidantaRaw = trend2[elapsedPeriods % trend2.length];
+  const alexPick = trendAlex[elapsed % trendAlex.length];
+  const sidantaPick = trendSidanta[elapsed % trendSidanta.length];
 
   return {
     period: String(periodNumber).slice(-3),
-    alex: alexRaw === "B" ? "BIG" : "SMALL",
-    sidanta: sidantaRaw === "B" ? "BIG" : "SMALL"
+    alex: alexPick === "B" ? "BIG" : "SMALL",
+    sidanta: sidantaPick === "B" ? "BIG" : "SMALL"
   };
 }
 
@@ -55,39 +55,34 @@ function getPredictionData() {
 function sendPredictions() {
   const d = getPredictionData();
 
-  const alexMessage = `
-  💫 WinGo 30 Second 💥
-  🧛Alex
-👋 Hello Users
+  const alexMsg = `
+💥💥WinGo 1 Minute 💥💥
+    🦸Alex Bhai
 
 🕒 Period: ${d.period}
 🔮 Prediction: ${d.alex === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
-
-✅ Alex & Sidanta dono ke prediction dekho
-🎯 Jiska sahi aaye — usko FOLLOW karo
 `;
 
-  const sidantaMessage = `
-  🤹 Sidanta
-👋 Hello Users
+  const sidantaMsg = `
+🤹Sidanta Bhai
 
 🕒 Period: ${d.period}
 🔮 Prediction: ${d.sidanta === "BIG" ? "🔥 BIG 🔥" : "🌈 SMALL 🌈"}
 
-✅ Alex & Sidanta dono ke prediction dekho
-🎯 Jiska sahi aaye — usko FOLLOW karo
+✅ Alex & Sidanta dono ka result dekho
+🎯 Jo sahi aaye — usko FOLLOW karo
 `;
 
-  alex.sendMessage(GROUP_ID, alexMessage);
-  sidanta.sendMessage(GROUP_ID, sidantaMessage);
+  alex.sendMessage(GROUP_ID, alexMsg);
+  sidanta.sendMessage(GROUP_ID, sidantaMsg);
 
   console.log(
-    `Sent | Period ${d.period} | Alex: ${d.alex} | Sidanta: ${d.sidanta}`
+    `1MIN | P:${d.period} | Alex:${d.alex} | Sidanta:${d.sidanta}`
   );
 }
 
 // ================== AUTO RUN ==================
-sendPredictions(); // run once on start
+sendPredictions();          // start hote hi ek baar
 setInterval(sendPredictions, PERIOD_TIME);
 
-console.log("🤖 Alex & Sidanta bots running successfully...");
+console.log("🤖 1-Minute Predictor (Correct Trend) Running...");
