@@ -56,6 +56,7 @@ function sendPredictions() {
   const d = getPredictionData();
 
   const alexMessage = `
+  💫 WinGo 30 Second 💥
 👋 Hello Users
 
 📊 Prediction Time!
